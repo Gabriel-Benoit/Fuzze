@@ -1,3 +1,14 @@
+"""
+This module contains functions to work with grammars. A grammar is a dictionary where the keys are the names 
+of the rules and the values are lists of expansions. An expansion can be a string or a tuple. If it is a string,
+it is a simple expansion. If it is a tuple, the first element is the expansion and the second is a dictionary with some parameters.
+The second case is useful to attribute some properties to the expansion, like the depth cost of generating it.
+Supported macros:
+    - '*' : zero or more
+    - '+' : one or more
+    - '?' : zero or one
+"""
+
 from __future__ import annotations
 from collections import defaultdict
 from copy import deepcopy
@@ -10,16 +21,6 @@ from .types import Expansion, GrammarDict, ImmutableGrammar
 
 logger = logging.getLogger(__name__)
 
-"""
-This module contains functions to work with grammars. A grammar is a dictionary where the keys are the names 
-of the rules and the values are lists of expansions. An expansion can be a string or a tuple. If it is a string,
-it is a simple expansion. If it is a tuple, the first element is the expansion and the second is a dictionary with some parameters.
-The second case is useful to attribute some properties to the expansion, like the depth cost of generating it.
-Supported macros:
-    - '*' : zero or more
-    - '+' : one or more
-    - '?' : zero or one
-"""
 
 T = TypeVar("T")
 
@@ -467,8 +468,8 @@ class Grammar:
     On top of that it provides an interface to chain methods."""
 
     def __init__(self, grammar: GrammarDict, start_symbol: str = "<start>") -> None:
-        # if start_symbol:
-        #    assert Grammar.is_correct(grammar, ignore_start=start_symbol)
+        assert start_symbol in grammar
+        assert len(grammar) > 0
         self._grammar = defaultdict(list, grammar)
         self._start_symbol = start_symbol
 
