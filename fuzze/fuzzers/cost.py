@@ -14,7 +14,7 @@ class Cost:
             self._value: int | Literal["inf"] = init
 
     def __ge__(self, value: int | Cost) -> bool:
-        if value == self:
+        if self == value:
             return True
         return self > value
 
@@ -22,16 +22,14 @@ class Cost:
         return not self >= value
 
     def __le__(self, value: int | Cost) -> bool:
-        if value == self:
+        if self == value:
             return True
         return not self > value
 
     def __eq__(self, value: object) -> bool:
         if isinstance(value, Cost):
             return self.value == value.value
-        if self.value == value == "inf":
-            return True
-        return super().__eq__(value)
+        return self.value == value
 
     def __gt__(self, value: int | Cost) -> bool:
         if self.value == "inf":
@@ -53,11 +51,13 @@ class Cost:
 
     def __sub__(self, other: int | Cost) -> Cost:
         if isinstance(other, Cost):
-            if self.value == "inf":
-                return Cost("inf")
             if other.value == "inf":
                 # TODO Decide how to handle this case
-                raise NotImplemented
+                raise NotImplementedError(
+                    "Subtraction of inf from a finite value is not supported"
+                )
+            if self.value == "inf":
+                return Cost("inf")
             return Cost(self.value - other.value)
         if self.value == "inf":
             return Cost("inf")
@@ -75,10 +75,16 @@ class Cost:
 
     def __truediv__(self, other: int | Cost) -> Cost:
         if isinstance(other, Cost):
-            if self.value == "inf" or other.value == "inf" or other.value == 0:
+            if self.value == "inf" and other.value == "inf":
+                raise NotImplementedError("Division of inf by inf is not supported")
+            if self.value == "inf" or other.value == 0:
                 return Cost("inf")
+            if other.value == "inf":
+                return Cost(0)
             return Cost(self.value // other.value)
         if self.value == "inf":
+            return Cost("inf")
+        if other == 0:
             return Cost("inf")
         return Cost(self.value // other)
 
@@ -86,19 +92,17 @@ class Cost:
         return self.__add__(other)
 
     def __rsub__(self, other: int | Cost) -> Cost:
-        return self.__sub__(other)
+        if isinstance(other, Cost):
+            return other.__sub__(self)
+        return Cost(other).__sub__(self)
 
     def __rmul__(self, other: int | Cost) -> Cost:
         return self.__mul__(other)
 
     def __rtruediv__(self, other: int | Cost) -> Cost:
-        if self.value == 0:
-            return Cost("inf")
         if isinstance(other, Cost):
-            if other.value == 0:
-                return Cost("inf")
-            return Cost(other.value // self.value)  # type: ignore
-        return Cost(other // self.value)  # type: ignore
+            return other.__truediv__(self)
+        return Cost(other).__truediv__(self)
 
     def __repr__(self) -> str:
         return f"Cost({self.value})"
